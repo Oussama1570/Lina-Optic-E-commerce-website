@@ -1,6 +1,6 @@
 import React from "react";
 import { FaTruck, FaInstagram, FaFacebookF } from "react-icons/fa";
-import "../styles/StylesFreeShippingBanner.css";
+import "../Styles/StylesFreeShippingBanner.css";
 
 const FreeShippingBanner = () => {
   return (

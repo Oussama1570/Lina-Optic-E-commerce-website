@@ -4,6 +4,9 @@ import "react-multi-carousel/lib/styles.css";
 import ProductCard from "../products/ProductCard";
 import { useGetAllProductsQuery } from "../../redux/features/products/productsApi";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { useGetAllProductsQuery } from "../../../redux/features/products/productsApi";
+import { useDispatch, useSelector } from "react-redux";
+import { resetTrigger } from "../../../redux/features/products/productEventsSlice";
 import "../../Styles/StylesOurSellers.css";
 
 // 🧱 Available frame type options for filtering
@@ -75,6 +78,23 @@ const OurSellers = () => {
   if (selectedFrameType !== "") {
     filteredProducts = filteredProducts.filter((p) => p.frameType === selectedFrameType);
   }
+
+
+
+  const {
+    data: products,
+    isLoading,
+    refetch,
+  } = useGetAllProductsQuery();
+
+
+   // 🔁 Listen to refetch trigger
+  useEffect(() => {
+    if (shouldRefetch) {
+      refetch(); // Fetch latest products
+      dispatch(resetTrigger()); // Reset flag after fetch
+    }
+  }, [shouldRefetch, refetch, dispatch]);
 
   return (
     <div className="our-sellers">

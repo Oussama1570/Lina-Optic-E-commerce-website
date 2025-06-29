@@ -2,6 +2,10 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAddProductMutation } from "../../../redux/features/products/productsApi";
+import { useDispatch } from "react-redux";
+import { triggerRefetch } from "../../../redux/features/products/productEventsSlice";
+
+
 import Swal from "sweetalert2";
 import axios from "axios";
 import getBaseUrl from "../../../utils/baseURL";
@@ -89,22 +93,25 @@ const AddProduct = () => {
   };
 
   // ☁️ Upload a single image to the backend (used for both cover & color images)
-  const uploadImage = async (file) => {
-    if (!file || !(file instanceof File) || !file.type.startsWith("image/")) return "";
-    const formData = new FormData();
-    formData.append("image", file);
-    try {
-      const res = await axios.post(`${getBaseUrl()}/api/upload`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return res.data.image;
-    } catch (error) {
-      console.error("❌ Image upload failed:", error);
-      return "";
-    }
-  };
+  // ☁️ Upload a single image to the Cloudinary endpoint
+const uploadImage = async (file) => {
+  if (!file || !(file instanceof File) || !file.type.startsWith("image/")) return "";
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  try {
+    const res = await axios.post(`${getBaseUrl()}/api/upload-image`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // ✅ Return secure Cloudinary image URL
+    return res.data.url;
+  } catch (error) {
+    console.error("❌ Image upload failed:", error);
+    return "";
+  }
+};
 
 
   // 📤 Handle form submission
@@ -188,6 +195,13 @@ const AddProduct = () => {
       Swal.fire("Erreur!", "Échec de l'ajout du produit.", "error");
     }
   };
+
+  
+
+  const dispatch = useDispatch();
+
+await addProduct(newProductData).unwrap();
+dispatch(triggerRefetch());
 
 
     // 🧾 Render the form UI

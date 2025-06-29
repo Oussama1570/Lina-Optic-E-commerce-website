@@ -11,6 +11,12 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import getBaseUrl from "../../../utils/baseURL";
 import { getImgUrl } from "../../../utils/getImgUrl";
+
+import { useDispatch } from "react-redux";
+import { triggerRefetch } from "../../../redux/features/products/productEventsSlice";
+
+const dispatch = useDispatch();
+
 import "../../../Styles/StylesUpdateProduct.css";
 
 // 🧩 Main component for updating a product
@@ -221,6 +227,11 @@ const UpdateProduct = () => {
         Error loading product data.
       </div>
     );
+
+await updateProduct({ id, ...updatedProductData }).unwrap();
+dispatch(triggerRefetch());
+
+
 
   // 📄 Render update product form
   return (

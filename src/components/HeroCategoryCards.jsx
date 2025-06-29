@@ -14,7 +14,7 @@ const HeroCategoryCards = () => {
     zoom.style.backgroundPosition = `${x}% ${y}%`; // Set background position based on cursor
   };
 
-  // 🛑 Reset zoom to center when mouse leaves the card
+  // 🛑 Reset zoom to center when mouse leaves the card //
   const handleMouseLeave = (zoomRef) => {
     zoomRef.current.style.backgroundPosition = "center center";
   };

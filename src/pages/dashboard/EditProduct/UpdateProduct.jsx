@@ -15,7 +15,7 @@ import { getImgUrl } from "../../../utils/getImgUrl";
 import { useDispatch } from "react-redux";
 import { triggerRefetch } from "../../../redux/features/products/productEventsSlice";
 
-const dispatch = useDispatch();
+
 
 import "../../../Styles/StylesUpdateProduct.css";
 
@@ -39,6 +39,10 @@ const UpdateProduct = () => {
   const [imageFile, setImageFile] = useState(null);
   const [previewURL, setPreviewURL] = useState("");
   const [colors, setColors] = useState([]);
+
+  // ✅ Inside your component
+const dispatch = useDispatch();
+
 
   // 📋 Options for subcategories
   const subCategoryOptions = [

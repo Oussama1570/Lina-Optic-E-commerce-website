@@ -151,13 +151,15 @@ const dispatch = useDispatch();
   };
 
   // 📨 Handle form submission to update product
-  const onSubmit = async (data) => {
-    // ❗ Validate category fields before submitting
-    if (!mainCategory || !subCategory) {
-      Swal.fire("Error", "Please select a category and subcategory.", "error");
-      return;
-    }
+  // 📨 Handle form submission to update product
+const onSubmit = async (data) => {
+  // ❗ Validate category fields before submitting
+  if (!mainCategory || !subCategory) {
+    Swal.fire("Error", "Please select a category and subcategory.", "error");
+    return;
+  }
 
+  try {
     // 📤 Upload new cover image if changed
     let coverImage = productData.coverImage || "";
     if (imageFile) {
@@ -186,8 +188,7 @@ const dispatch = useDispatch();
       })
     );
 
-
-       // 📦 Final assembled product data to send to the backend
+    // 📦 Final assembled product data to send to the backend
     const updatedProductData = {
       ...data,
       mainCategory,
@@ -201,23 +202,31 @@ const dispatch = useDispatch();
       stockQuantity: updatedColors[0]?.stock || 0, // Set stock based on first color
     };
 
-   
+    // 🚀 Attempt to update the product
+    await updateProduct({ id, ...updatedProductData }).unwrap();
+    Swal.fire("Success!", "Product updated successfully!", "success");
 
-  Swal.fire("Success!", "Product updated successfully!", "success");
+    // 🧼 Clear temporary files and previews after update
+    setColors((prevColors) =>
+      prevColors.map((color) => ({
+        ...color,
+        imageFile: [],
+        previewURL: [],
+      }))
+    );
 
-  setColors((prevColors) =>
-    prevColors.map((color) => ({
-      ...color,
-      imageFile: [],
-      previewURL: [],
-    }))
-  );
+    // 🔁 Optionally refetch the product data
+    refetch();
 
-  refetch();
-} catch (error) {
-  console.error("❌ Update failed:", error?.data || error);
-  Swal.fire("Error", "Failed to update product.", "error");
-}
+    // 🔄 Trigger product list refetch
+    dispatch(triggerRefetch());
+
+  } catch (error) {
+    console.error("❌ Update failed:", error?.data || error);
+    Swal.fire("Error", "Failed to update product.", "error");
+  }
+};
+
 
 
   // ⏳ Show loading or error if data is not ready

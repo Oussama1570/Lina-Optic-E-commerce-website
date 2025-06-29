@@ -5,7 +5,7 @@ import hommeImage from "../assets/Glasses/Img HeroCategory Card Men Glasses n3.p
 import { Link } from "react-router-dom";
 
 const HeroCategoryCards = () => {
-  // 🧭 Handle mouse movement to create a zoom-follow effect
+  // 🧭 Handle mouse movement to create a zoom-follow effect //
   const handleMouseMove = (e, zoomRef) => {
     const zoom = zoomRef.current;
     const rect = zoom.getBoundingClientRect();

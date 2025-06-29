@@ -201,9 +201,7 @@ const dispatch = useDispatch();
       stockQuantity: updatedColors[0]?.stock || 0, // Set stock based on first color
     };
 
-   try {
-  await updateProduct({ id, ...updatedProductData }).unwrap();
-  dispatch(triggerRefetch()); // ✅ Correct placement
+   
 
   Swal.fire("Success!", "Product updated successfully!", "success");
 
@@ -231,7 +229,7 @@ const dispatch = useDispatch();
       </div>
     );
 
-
+    
 
   // 📄 Render update product form
   return (
@@ -435,3 +433,4 @@ const dispatch = useDispatch();
 };
 
 export default UpdateProduct;
+

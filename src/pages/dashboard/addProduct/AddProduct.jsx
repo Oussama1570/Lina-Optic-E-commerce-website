@@ -94,18 +94,19 @@ const AddProduct = () => {
 
   // ☁️ Upload a single image to the backend (used for both cover & color images)
   // ☁️ Upload a single image to the Cloudinary endpoint
+// ☁️ Upload a single image to the server (Cloudinary via your backend)
 const uploadImage = async (file) => {
-  if (!file || !(file instanceof File) || !file.type.startsWith("image/")) return "";
-
-  const formData = new FormData();
-  formData.append("image", file);
-
+  if (!file) return "";
   try {
-    const res = await axios.post(`${getBaseUrl()}/api/upload-image`, formData, {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    // ✅ Correct backend endpoint
+    const res = await axios.post(`${getBaseUrl()}/api/upload/upload-image`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    // ✅ Return secure Cloudinary image URL
+    // ✅ Assuming your backend returns { url: "...", public_id: "..." }
     return res.data.url;
   } catch (error) {
     console.error("❌ Image upload failed:", error);

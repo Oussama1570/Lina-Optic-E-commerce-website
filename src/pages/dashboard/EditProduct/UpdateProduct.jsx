@@ -201,27 +201,26 @@ const dispatch = useDispatch();
       stockQuantity: updatedColors[0]?.stock || 0, // Set stock based on first color
     };
 
-    try {
-      // 🚀 Attempt to update the product
-      await updateProduct({ id, ...updatedProductData }).unwrap();
-      Swal.fire("Success!", "Product updated successfully!", "success");
+   try {
+  await updateProduct({ id, ...updatedProductData }).unwrap();
+  dispatch(triggerRefetch()); // ✅ Correct placement
 
-      // 🧼 Clear temporary files and previews after update
-      setColors((prevColors) =>
-        prevColors.map((color) => ({
-          ...color,
-          imageFile: [],
-          previewURL: [],
-        }))
-      );
+  Swal.fire("Success!", "Product updated successfully!", "success");
 
-      // 🔁 Optionally refetch the product data
-      refetch();
-    } catch (error) {
-      console.error("❌ Update failed:", error?.data || error);
-      Swal.fire("Error", "Failed to update product.", "error");
-    }
-  };
+  setColors((prevColors) =>
+    prevColors.map((color) => ({
+      ...color,
+      imageFile: [],
+      previewURL: [],
+    }))
+  );
+
+  refetch();
+} catch (error) {
+  console.error("❌ Update failed:", error?.data || error);
+  Swal.fire("Error", "Failed to update product.", "error");
+}
+
 
   // ⏳ Show loading or error if data is not ready
   if (isLoading) return <Loading />;
@@ -231,9 +230,6 @@ const dispatch = useDispatch();
         Error loading product data.
       </div>
     );
-
-await updateProduct({ id, ...updatedProductData }).unwrap();
-dispatch(triggerRefetch());
 
 
 

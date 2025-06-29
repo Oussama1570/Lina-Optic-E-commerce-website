@@ -115,93 +115,83 @@ const uploadImage = async (file) => {
 
 
   // 📤 Handle form submission
-  const onSubmit = async (data) => {
-    // ✅ Validate category selection before submitting
-    if (!mainCategory || !subCategory) {
-      Swal.fire("Erreur", "Veuillez sélectionner une catégorie et une sous-catégorie.", "error");
-      return;
-    }
+  const dispatch = useDispatch();
 
-    // 🖼️ Upload the cover image if it’s a valid image file
-    let coverImage = "";
-    if (coverImageFile instanceof File && coverImageFile.type.startsWith("image/")) {
-      coverImage = await uploadImage(coverImageFile);
-    }
+const onSubmit = async (data) => {
+  if (!mainCategory || !subCategory) {
+    Swal.fire("Erreur", "Veuillez sélectionner une catégorie et une sous-catégorie.", "error");
+    return;
+  }
 
-    // 🎨 Process color blocks: upload each color's images and structure color data
-    const colors = await Promise.all(
-      colorInputs.map(async (input) => {
-        if (
-          input.colorName &&
-          Array.isArray(input.imageFiles) &&
-          input.stock >= 0
-        ) {
-          const uploadedImages = [];
+  let coverImage = "";
+  if (coverImageFile instanceof File && coverImageFile.type.startsWith("image/")) {
+    coverImage = await uploadImage(coverImageFile);
+  }
 
-          // ☁️ Upload each image file for this color
-          for (const file of input.imageFiles) {
-            if (file && file.type.startsWith("image/")) {
-              const imageUrl = await uploadImage(file);
-              uploadedImages.push(imageUrl);
-            }
+  const colors = await Promise.all(
+    colorInputs.map(async (input) => {
+      if (
+        input.colorName &&
+        Array.isArray(input.imageFiles) &&
+        input.stock >= 0
+      ) {
+        const uploadedImages = [];
+        for (const file of input.imageFiles) {
+          if (file && file.type.startsWith("image/")) {
+            const imageUrl = await uploadImage(file);
+            uploadedImages.push(imageUrl);
           }
-
-          // 🎯 Return color object in multilingual format with images and stock
-          return {
-            colorName: {
-              en: input.colorName,
-              fr: input.colorName, // Optional: replace with translations if needed
-              ar: input.colorName,
-            },
-            images: uploadedImages,
-            stock: Number(input.stock),
-          };
         }
 
-        return null; // ⛔ Skip invalid color blocks
-      })
-    );
+        return {
+          colorName: {
+            en: input.colorName,
+            fr: input.colorName,
+            ar: input.colorName,
+          },
+          images: uploadedImages,
+          stock: Number(input.stock),
+        };
+      }
 
-    // 🧼 Remove null values (failed or empty color blocks)
-    const filteredColors = colors.filter(Boolean);
+      return null;
+    })
+  );
 
-    // 📦 Construct final product data to send
-    const newProductData = {
-      ...data,
-      mainCategory,
-      subCategory,
-      frameType: data.frameType || "",
-      coverImage,
-      colors: filteredColors,
-      brand: data.brand || "",
-      oldPrice: Number(data.oldPrice),
-      newPrice: Number(data.newPrice),
-      stockQuantity: filteredColors[0]?.stock || 0, // Initial stock from first color
-    };
+  const filteredColors = colors.filter(Boolean);
 
-    try {
-      // 🚀 Submit product using RTK Query mutation
-      await addProduct(newProductData).unwrap();
-
-      // ✅ Success alert and reset form
-      Swal.fire("Succès!", "Produit ajouté avec succès!", "success");
-      reset();
-      setCoverImageFile(null);
-      setCoverPreviewURL("");
-      setColorInputs([]);
-    } catch (error) {
-      // ❌ Error handling on failure
-      console.error("❌ Error adding product:", error?.data || error);
-      Swal.fire("Erreur!", "Échec de l'ajout du produit.", "error");
-    }
+  const newProductData = {
+    ...data,
+    mainCategory,
+    subCategory,
+    frameType: data.frameType || "",
+    coverImage,
+    colors: filteredColors,
+    brand: data.brand || "",
+    oldPrice: Number(data.oldPrice),
+    newPrice: Number(data.newPrice),
+    stockQuantity: filteredColors[0]?.stock || 0,
   };
+
+  try {
+    await addProduct(newProductData).unwrap();
+    dispatch(triggerRefetch()); // ✅ THIS IS THE CORRECT PLACE
+
+    Swal.fire("Succès!", "Produit ajouté avec succès!", "success");
+    reset();
+    setCoverImageFile(null);
+    setCoverPreviewURL("");
+    setColorInputs([]);
+  } catch (error) {
+    console.error("❌ Error adding product:", error?.data || error);
+    Swal.fire("Erreur!", "Échec de l'ajout du produit.", "error");
+  }
+};
+
 
   
 
-  const dispatch = useDispatch();
-
-await addProduct(newProductData).unwrap();
-dispatch(triggerRefetch());
+  
 
 
     // 🧾 Render the form UI

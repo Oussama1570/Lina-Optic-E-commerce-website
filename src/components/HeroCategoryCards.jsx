@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import "../Styles/StylesHeroCategoryCards.css"; // 🎨 Import custom styles
-import femmeImage from "../assets/Glasses/Img HeroCategory Card Women Glasses.png"; // 👓 Image for women's glasses
-import hommeImage from "../assets/Glasses/Img HeroCategory Card Men Glasses.png";   // 👓 Image for men's glasses
+import femmeImage from "../assets/Glasses/Img HeroCategory Card Women Glasses n2.png"; // 👓 Image for women's glasses
+import hommeImage from "../assets/Glasses/Img HeroCategory Card Men Glasses n3.png";   // 👓 Image for men's glasses
 import { Link } from "react-router-dom";
 
 const HeroCategoryCards = () => {

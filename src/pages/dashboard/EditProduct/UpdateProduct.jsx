@@ -1,3 +1,4 @@
+// 📦 Import React, hooks, API calls, utilities, and styling
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
@@ -12,24 +13,35 @@ import getBaseUrl from "../../../utils/baseURL";
 import { getImgUrl } from "../../../utils/getImgUrl";
 import "../../../Styles/StylesUpdateProduct.css";
 
+// 🧩 Main component for updating a product
 const UpdateProduct = () => {
+  // 📌 Get product ID from the route
   const { id } = useParams();
+
+  // 📊 Fetch product data by ID
   const { data: productData, isLoading, isError, refetch } = useGetProductByIdQuery(id);
+
+  // 📝 Initialize form management
   const { register, handleSubmit, setValue } = useForm();
+
+  // 🔄 Setup mutation for updating the product
   const [updateProduct, { isLoading: updating }] = useUpdateProductMutation();
 
+  // 🧠 Local state for categories, image, colors
   const [mainCategory, setMainCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [previewURL, setPreviewURL] = useState("");
   const [colors, setColors] = useState([]);
 
+  // 📋 Options for subcategories
   const subCategoryOptions = [
     { value: "Optique", label: "Lunettes de vue" },
     { value: "Solaire", label: "Lunettes de soleil" },
     { value: "Lentilles", label: "Lentilles de contact" },
   ];
 
+  // 📋 Options for frame types
   const frameTypeOptions = [
     "Plein cadre",
     "Demi-cadre (semi-cerclé)",
@@ -44,6 +56,7 @@ const UpdateProduct = () => {
     "Cadre ovale",
   ];
 
+  // ⏬ Prefill form when product data is available
   useEffect(() => {
     if (productData) {
       setValue("title", productData.title);
@@ -58,6 +71,7 @@ const UpdateProduct = () => {
       setMainCategory(productData.mainCategory || "");
       setSubCategory(productData.subCategory || "");
 
+      // ✅ Set preview image for the cover
       const coverImageUrl = productData.coverImage || "";
       setPreviewURL(
         coverImageUrl.startsWith("http")
@@ -65,6 +79,7 @@ const UpdateProduct = () => {
           : `${getBaseUrl()}${coverImageUrl}`
       );
 
+      // 🎨 Format colors array if present
       if (Array.isArray(productData.colors)) {
         const formattedColors = productData.colors.map((color) => ({
           colorName:
@@ -81,6 +96,7 @@ const UpdateProduct = () => {
     }
   }, [productData, setValue]);
 
+  // 📤 Handle main cover image file input
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -89,12 +105,14 @@ const UpdateProduct = () => {
     }
   };
 
+  // 🎨 Handle changes in color fields (name, stock, images)
   const handleColorChange = (index, field, value) => {
     const updatedColors = [...colors];
     updatedColors[index][field] = value;
     setColors(updatedColors);
   };
 
+  // ➕ Add a new empty color block
   const addColor = () => {
     setColors([
       ...colors,
@@ -108,10 +126,12 @@ const UpdateProduct = () => {
     ]);
   };
 
+  // ❌ Remove a specific color block
   const deleteColor = (index) => {
     setColors(colors.filter((_, i) => i !== index));
   };
 
+  // ☁️ Upload a single image to the server
   const uploadImage = async (file) => {
     if (!file) return "";
     const formData = new FormData();
@@ -120,17 +140,21 @@ const UpdateProduct = () => {
     return res.data.image;
   };
 
+  // 📨 Handle form submission to update product
   const onSubmit = async (data) => {
+    // ❗ Validate category fields before submitting
     if (!mainCategory || !subCategory) {
-      Swal.fire("Erreur", "Veuillez sélectionner une catégorie et une sous-catégorie.", "error");
+      Swal.fire("Error", "Please select a category and subcategory.", "error");
       return;
     }
 
+    // 📤 Upload new cover image if changed
     let coverImage = productData.coverImage || "";
     if (imageFile) {
       coverImage = await uploadImage(imageFile);
     }
 
+    // 🔁 Upload all new images per color and build updated colors array
     const updatedColors = await Promise.all(
       colors.map(async (color) => {
         const uploadedImages = [];
@@ -152,6 +176,8 @@ const UpdateProduct = () => {
       })
     );
 
+
+       // 📦 Final assembled product data to send to the backend
     const updatedProductData = {
       ...data,
       mainCategory,
@@ -162,14 +188,15 @@ const UpdateProduct = () => {
       colors: updatedColors,
       oldPrice: Number(data.oldPrice),
       newPrice: Number(data.newPrice),
-      stockQuantity: updatedColors[0]?.stock || 0,
+      stockQuantity: updatedColors[0]?.stock || 0, // Set stock based on first color
     };
 
     try {
+      // 🚀 Attempt to update the product
       await updateProduct({ id, ...updatedProductData }).unwrap();
-      Swal.fire("Succès !", "Produit mis à jour avec succès !", "success");
+      Swal.fire("Success!", "Product updated successfully!", "success");
 
-      // ✅ Clear temp files to avoid image duplication
+      // 🧼 Clear temporary files and previews after update
       setColors((prevColors) =>
         prevColors.map((color) => ({
           ...color,
@@ -178,110 +205,156 @@ const UpdateProduct = () => {
         }))
       );
 
+      // 🔁 Optionally refetch the product data
       refetch();
     } catch (error) {
       console.error("❌ Update failed:", error?.data || error);
-      Swal.fire("Erreur !", "Échec de la mise à jour du produit.", "error");
+      Swal.fire("Error", "Failed to update product.", "error");
     }
   };
 
+  // ⏳ Show loading or error if data is not ready
+  if (isLoading) return <Loading />;
+  if (isError)
+    return (
+      <div className="text-center text-red-500">
+        Error loading product data.
+      </div>
+    );
 
-
-
-if (isLoading) return <Loading />;
-if (isError) return <div className="text-center text-red-500">Erreur lors de la récupération des données du produit.</div>;
-
-
-   return (
+  // 📄 Render update product form
+  return (
     <div className="update-product-container">
-      <h2 className="update-product-title">Mettre à jour le produit</h2>
+      <h2 className="update-product-title">Update Product</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="update-product-form">
-
-        <label>Nom du produit</label>
+        {/* ===== Basic Info ===== */}
+        <label>Product Title</label>
         <input {...register("title")} type="text" required />
 
-        <label>Description du produit</label>
+        <label>Product Description</label>
         <textarea {...register("description")} rows="4" required />
 
-        <label>Catégorie principale</label>
-        <select value={mainCategory} onChange={(e) => setMainCategory(e.target.value)} required>
-          <option value="">Sélectionnez une catégorie</option>
-          <option value="Hommes">Hommes</option>
-          <option value="Femmes">Femmes</option>
-          <option value="Enfants">Enfants</option>
+        {/* ===== Category Selectors ===== */}
+        <label>Main Category</label>
+        <select
+          value={mainCategory}
+          onChange={(e) => setMainCategory(e.target.value)}
+          required
+        >
+          <option value="">Select a category</option>
+          <option value="Hommes">Men</option>
+          <option value="Femmes">Women</option>
+          <option value="Enfants">Kids</option>
         </select>
 
         {mainCategory && (
           <>
-            <label>Sous-catégorie</label>
-            <select value={subCategory} onChange={(e) => setSubCategory(e.target.value)} required>
-              <option value="">Sélectionnez une sous-catégorie</option>
+            <label>Subcategory</label>
+            <select
+              value={subCategory}
+              onChange={(e) => setSubCategory(e.target.value)}
+              required
+            >
+              <option value="">Select a subcategory</option>
               {subCategoryOptions.map((option, idx) => (
-                <option key={idx} value={option.value}>{option.label}</option>
+                <option key={idx} value={option.value}>
+                  {option.label}
+                </option>
               ))}
             </select>
           </>
         )}
 
-        <label>Type de cadre</label>
+        <label>Frame Type</label>
         <select {...register("frameType")}>
-          <option value="">Sélectionnez un type de cadre</option>
+          <option value="">Select a frame type</option>
           {frameTypeOptions.map((type, idx) => (
-            <option key={idx} value={type}>{type}</option>
+            <option key={idx} value={type}>
+              {type}
+            </option>
           ))}
         </select>
 
-        <label>Marque</label>
-        <input {...register("brand")} placeholder="Entrez la marque du produit" required />
+        {/* ===== Pricing ===== */}
+        <label>Brand</label>
+        <input
+          {...register("brand")}
+          placeholder="Enter product brand"
+          required
+        />
 
-        <label>Prix ancien</label>
-        <input {...register("oldPrice")} type="number" placeholder="Ancien prix" required />
+        <label>Old Price</label>
+        <input
+          {...register("oldPrice")}
+          type="number"
+          placeholder="Previous price"
+          required
+        />
 
-        <label>Prix actuel</label>
-        <input {...register("newPrice")} type="number" placeholder="Nouveau prix" required />
+        <label>New Price</label>
+        <input
+          {...register("newPrice")}
+          type="number"
+          placeholder="Current price"
+          required
+        />
 
-        <label>Quantité en stock</label>
-        <input {...register("stockQuantity")} type="number" min="0" required />
+        <label>Stock Quantity</label>
+        <input
+          {...register("stockQuantity")}
+          type="number"
+          min="0"
+          required
+        />
 
         <div className="checkbox-wrapper">
           <input type="checkbox" {...register("trending")} />
-          Marquer comme tendance
+          Mark as Trending
         </div>
 
-        <label>Image principale</label>
+        {/* ===== Cover Image Upload ===== */}
+        <label>Cover Image</label>
         <input type="file" accept="image/*" onChange={handleFileChange} />
-        {previewURL && <img src={previewURL} alt="Aperçu" className="update-cover-preview" />}
+        {previewURL && (
+          <img src={previewURL} alt="Preview" className="update-cover-preview" />
+        )}
 
-        <label>Couleurs du produit</label>
+        {/* ===== Color Variants ===== */}
+        <label>Product Colors</label>
         {colors.map((color, index) => (
           <div key={index} className="color-block">
             <input
               type="text"
               value={color.colorName}
-              onChange={(e) => handleColorChange(index, "colorName", e.target.value)}
-              placeholder="Nom de la couleur"
+              onChange={(e) =>
+                handleColorChange(index, "colorName", e.target.value)
+              }
+              placeholder="Color name"
               required
             />
 
             <input
               type="number"
               value={color.stock}
-              onChange={(e) => handleColorChange(index, "stock", Number(e.target.value))}
-              placeholder="Quantité en stock"
+              onChange={(e) =>
+                handleColorChange(index, "stock", Number(e.target.value))
+              }
+              placeholder="Stock quantity"
               required
             />
 
-            {/* 🌐 Existing saved images */}
-            {Array.isArray(color.images) && color.images.map((imgUrl, i) => (
-              <img
-                key={`saved-${i}`}
-                src={getImgUrl(imgUrl)}
-                alt={`Image ${i + 1}`}
-                className="color-preview"
-              />
-            ))}
+            {/* Show saved server-side images */}
+            {Array.isArray(color.images) &&
+              color.images.map((imgUrl, i) => (
+                <img
+                  key={`saved-${i}`}
+                  src={getImgUrl(imgUrl)}
+                  alt={`Image ${i + 1}`}
+                  className="color-preview"
+                />
+              ))}
 
-            {/* 🖼️ Dynamically uploaded previews */}
+            {/* Show preview for newly uploaded images */}
             {color.previewURL?.map?.((url, i) =>
               url ? (
                 <div key={`preview-${i}`} className="image-preview-group">
@@ -290,7 +363,7 @@ if (isError) return <div className="text-center text-red-500">Erreur lors de la 
               ) : null
             )}
 
-            {/* 📁 File uploaders for each new image */}
+            {/* Upload inputs for each image slot */}
             {color.imageFile?.map?.((file, i) => (
               <div key={`file-${i}`} className="image-preview-group">
                 <input
@@ -311,7 +384,7 @@ if (isError) return <div className="text-center text-red-500">Erreur lors de la 
               </div>
             ))}
 
-            {/* ➕ Add new file input */}
+            {/* ➕ Add image input */}
             <button
               type="button"
               onClick={() => {
@@ -322,25 +395,28 @@ if (isError) return <div className="text-center text-red-500">Erreur lors de la 
               }}
               className="btn-add-more-img"
             >
-              + Ajouter une image
+              + Add an image
             </button>
 
+            {/* 🗑️ Delete color */}
             <button
               type="button"
               onClick={() => deleteColor(index)}
               className="btn-delete-color"
             >
-              Supprimer
+              Delete
             </button>
           </div>
         ))}
 
+        {/* ➕ Add new color block */}
         <button type="button" onClick={addColor} className="btn-add-color">
-          Ajouter une couleur
+          Add a color
         </button>
 
+        {/* ✅ Submit form */}
         <button type="submit" className="btn-submit">
-          {updating ? "Mise à jour..." : "Mettre à jour le produit"}
+          {updating ? "Updating..." : "Update Product"}
         </button>
       </form>
     </div>

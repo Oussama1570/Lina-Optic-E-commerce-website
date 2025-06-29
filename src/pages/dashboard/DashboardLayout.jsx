@@ -11,15 +11,21 @@ import { Helmet } from 'react-helmet';
 const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  // 📱 State to toggle sidebar for mobile view
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // 🌙 Manage dark mode state using localStorage
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
+  // 📱 Close sidebar automatically on mobile after clicking a link
   const handleMobileNav = () => {
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
   };
 
+  // 🌓 Apply or remove dark mode styles
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -30,6 +36,7 @@ const DashboardLayout = () => {
     }
   }, [darkMode]);
 
+  // 🚪 Handle logout confirmation and redirect
   const handleLogout = async () => {
     const result = await Swal.fire({
       title: "Êtes-vous sûr ?",
@@ -53,21 +60,22 @@ const DashboardLayout = () => {
     }
   };
 
+  // ✅ Check if the current route is active
   const isActive = (path) => location.pathname === path;
 
-    return (
+  return (
     <div className="flex bg-gray-100 dark:bg-gray-900 min-h-screen">
       <Helmet>
         <title>Admin | Lina Optic</title>
       </Helmet>
 
-      {/* 🧭 Sidebar */}
+      {/* 🧭 Sidebar Navigation Panel */}
       <aside
         className={`fixed top-0 left-0 h-full w-56 bg-blue-100 text-gray-700 dark:bg-gray-800 dark:text-white flex flex-col items-center py-6 z-50 transition-transform duration-300 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 shadow-md border-r border-blue-200 dark:border-gray-700`}
       >
-        {/* 🔘 Close Toggle (mobile) */}
+        {/* ❌ Mobile Close Sidebar Button */}
         <div className="w-full flex justify-end md:hidden px-4 mb-4">
           <button
             onClick={() => setSidebarOpen(false)}
@@ -78,7 +86,7 @@ const DashboardLayout = () => {
           </button>
         </div>
 
-        {/* 🏠 Home Icon */}
+        {/* 🏠 Home Link */}
         <Link
           to="/"
           title="Accueil"
@@ -88,8 +96,9 @@ const DashboardLayout = () => {
           <FaHome className="text-3xl" />
         </Link>
 
-        {/* Navigation Links */}
+        {/* 📂 Sidebar Menu Links */}
         <nav className="flex flex-col gap-3 w-full px-4">
+          {/* Dashboard */}
           <Link
             to="/dashboard"
             onClick={handleMobileNav}
@@ -103,6 +112,7 @@ const DashboardLayout = () => {
             <span className="text-sm font-medium">Tableau</span>
           </Link>
 
+          {/* Add New Product */}
           <Link
             to="/dashboard/add-new-product"
             onClick={handleMobileNav}
@@ -116,6 +126,7 @@ const DashboardLayout = () => {
             <span className="text-sm font-medium">Ajouter</span>
           </Link>
 
+          {/* Manage Products */}
           <Link
             to="/dashboard/manage-products"
             onClick={handleMobileNav}
@@ -129,6 +140,7 @@ const DashboardLayout = () => {
             <span className="text-sm font-medium">Produits</span>
           </Link>
 
+          {/* Manage Orders */}
           <Link
             to="/dashboard/manage-orders"
             onClick={handleMobileNav}
@@ -142,7 +154,7 @@ const DashboardLayout = () => {
             <span className="text-sm font-medium">Commandes</span>
           </Link>
 
-          {/* 🔴 Logout */}
+          {/* 🔒 Logout */}
           <button
             onClick={() => {
               handleLogout();
@@ -156,9 +168,9 @@ const DashboardLayout = () => {
         </nav>
       </aside>
 
-      {/* 📄 Main Content Wrapper */}
+      {/* 📱 Main Content Area */}
       <div className="flex-1 w-full flex flex-col md:ml-56">
-        {/* ☰ Mobile Sidebar Toggle */}
+        {/* ☰ Sidebar Toggle for Mobile */}
         <div className="md:hidden p-4">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -168,13 +180,15 @@ const DashboardLayout = () => {
           </button>
         </div>
 
-        {/* 🔝 Header */}
+        {/* 🧾 Header */}
         <header className="w-full bg-white dark:bg-gray-800 shadow px-6 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
           <h1 className="text-xl font-semibold text-gray-800 dark:text-white">
             Tableau de Bord
           </h1>
 
+          {/* ➕ Header Action Buttons */}
           <div className="flex flex-col md:flex-row w-full gap-3 items-center md:justify-end">
+            {/* Add Product Button */}
             <Link to="/dashboard/add-new-product">
               <button className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-full shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <FaPlusCircle className="text-base" />
@@ -182,6 +196,7 @@ const DashboardLayout = () => {
               </button>
             </Link>
 
+            {/* Manage Products Button */}
             <Link to="/dashboard/manage-products">
               <button className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-full shadow hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
                 <FaTools className="text-base" />
@@ -189,6 +204,7 @@ const DashboardLayout = () => {
               </button>
             </Link>
 
+            {/* Logout Button */}
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-full shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -199,7 +215,7 @@ const DashboardLayout = () => {
           </div>
         </header>
 
-        {/* 📄 Page Content */}
+        {/* 🧾 Main Dashboard Content (child route will appear here) */}
         <main className="flex-1 p-6 bg-gray-50 dark:bg-gray-900 transition-all">
           <Outlet />
         </main>
@@ -209,4 +225,3 @@ const DashboardLayout = () => {
 };
 
 export default DashboardLayout;
-

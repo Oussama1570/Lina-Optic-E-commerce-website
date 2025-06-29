@@ -6,6 +6,7 @@ import { useGetAllProductsQuery } from "../../redux/features/products/productsAp
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import "../../Styles/StylesOurSellers.css";
 
+// 🧱 Available frame type options for filtering
 const frameTypeOptions = [
   "Plein cadre",
   "Demi-cadre (semi-cerclé)",
@@ -20,6 +21,7 @@ const frameTypeOptions = [
   "Cadre ovale",
 ];
 
+// 🎯 Responsive breakpoints for the carousel
 const responsive = {
   superLargeDesktop: { breakpoint: { max: 4000, min: 1400 }, items: 3 },
   desktop: { breakpoint: { max: 1400, min: 1024 }, items: 3 },
@@ -27,12 +29,14 @@ const responsive = {
   mobile: { breakpoint: { max: 768, min: 0 }, items: 1 },
 };
 
+// ⬅️ Custom left navigation arrow
 const CustomLeftArrow = ({ onClick }) => (
   <button className="custom-arrow left" onClick={onClick}>
     <FiChevronLeft size={20} />
   </button>
 );
 
+// ➡️ Custom right navigation arrow
 const CustomRightArrow = ({ onClick }) => (
   <button className="custom-arrow right" onClick={onClick}>
     <FiChevronRight size={20} />
@@ -40,19 +44,22 @@ const CustomRightArrow = ({ onClick }) => (
 );
 
 const OurSellers = () => {
+  // 🧪 States for selected filter options
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [selectedBrand, setSelectedBrand] = useState("");
   const [selectedFrameType, setSelectedFrameType] = useState("");
 
+  // 🛍️ Fetch all products using RTK Query
   const { data: products = [] } = useGetAllProductsQuery();
 
+  // 🏷️ Extract unique brands for the brand filter
   const uniqueBrands = useMemo(() => {
     const brandsSet = new Set(products.map((p) => p.brand).filter(Boolean));
     return Array.from(brandsSet);
   }, [products]);
 
-  // ✅ Apply filters
+  // 🔍 Apply filters sequentially
   let filteredProducts = selectedCategory === ""
     ? products
     : products.filter((p) => p.mainCategory === selectedCategory);
@@ -71,8 +78,10 @@ const OurSellers = () => {
 
   return (
     <div className="our-sellers">
+      {/* 🔠 Section title */}
       <h2 className="our-sellers-title">Notre Collection</h2>
 
+      {/* 🎚️ Filters */}
       <div
         className="filters-wrapper"
         style={{
@@ -83,6 +92,7 @@ const OurSellers = () => {
           marginBottom: "2rem",
         }}
       >
+        {/* 📌 Category filter */}
         <select
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
@@ -93,6 +103,7 @@ const OurSellers = () => {
           <option value="Enfants">Enfants</option>
         </select>
 
+        {/* 🗂️ Subcategory filter */}
         <select
           value={selectedSubCategory}
           onChange={(e) => setSelectedSubCategory(e.target.value)}
@@ -103,6 +114,7 @@ const OurSellers = () => {
           <option value="Lentilles">Lentilles de contact</option>
         </select>
 
+        {/* 🏷️ Brand filter */}
         <select
           value={selectedBrand}
           onChange={(e) => setSelectedBrand(e.target.value)}
@@ -115,6 +127,7 @@ const OurSellers = () => {
           ))}
         </select>
 
+        {/* 🔳 Frame type filter */}
         <select
           value={selectedFrameType}
           onChange={(e) => setSelectedFrameType(e.target.value)}
@@ -128,6 +141,7 @@ const OurSellers = () => {
         </select>
       </div>
 
+      {/* 🎠 Product carousel */}
       <div className="carousel-wrapper">
         <Carousel
           responsive={responsive}

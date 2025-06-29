@@ -80,176 +80,170 @@ const AdminOrdersProgress = () => {
       [productKey]: updatedValue,
     };
   
-    try {
-      // ✅ 1. Save to DB
-      await updateOrder({
-        orderId,
-        productProgress: updatedProgress,
-      }).unwrap();
-  
-      Swal.fire({
-        title: "Succès!",
-        text: "Le progrès de la commande a été enregistré avec succès.",
-        icon: "success",
-        confirmButtonText: "OK",
-        customClass: {
-          confirmButton: "btn btn-success",
-        },
-      });
-  
-      // ✅ 2. Send notification if step is 60% or 100%
-      if ([60, 100].includes(updatedValue) && productKey && email) {
-        // Remove the index from the productKey: `${productId}|${colorName}|${index}`
-        const [productId] = productKey.split("|");
+   try {
+  // ✅ Save to DB
+  await updateOrder({
+    orderId,
+    productProgress: updatedProgress,
+  }).unwrap();
 
-// ✅ Find the matching product to extract color in French
-const matchedProduct = order.products.find((p) => {
-  return (
-    p.productId._id.toString() === productId &&
-    p.color?.colorName // ensure exists
-  );
-});
+  // ✅ Success Swal
+  Swal.fire({
+    title: "Succès!",
+    text: "Le progrès de la commande a été enregistré avec succès.",
+    icon: "success",
+    confirmButtonText: "OK",
+    customClass: {
+      confirmButton: "btn btn-success",
+    },
+  });
 
-if (!matchedProduct) {
-  console.error("❌ Produit non trouvé dans la commande");
-  return;
-}
+  // ✅ Send notification if needed
+  if ([60, 100].includes(updatedValue) && productKey && email) {
+    const [productId] = productKey.split("|");
 
-// ✅ Get color name in French
-const colorNameObj = matchedProduct.color.colorName;
-const cleanColorName =
-  typeof colorNameObj === "object" ? colorNameObj.fr : colorNameObj;
+    const matchedProduct = order.products.find((p) => {
+      return (
+        p.productId._id.toString() === productId &&
+        p.color?.colorName
+      );
+    });
 
-const cleanProductKey = `${productId}|${cleanColorName}`;
-
-
-  
-        await sendNotification({
-          orderId,
-          email,
-          productKey: cleanProductKey,
-          progress: updatedValue,
-        }).unwrap();
-  
-        Swal.fire({
-          title: "Notification envoyée",
-          text: `Une notification a été envoyée à ${order.name} pour ${updatedValue}% de progression.`,
-          icon: "info",
-          confirmButtonText: "OK",
-          customClass: {
-            confirmButton: "btn btn-info",
-          },
-        });
-      }
-  
-      setEditingProductKey(null);
-      refetch();
-    } catch (error) {
-      console.error("❌ Erreur lors de l'enregistrement/notification:", error);
-      Swal.fire({
-        title: "Erreur",
-        text:
-          error?.data?.message ||
-          "Échec de l'enregistrement du progrès de la commande.",
-        icon: "error",
-        confirmButtonText: "OK",
-        customClass: {
-          confirmButton: "btn btn-danger",
-        },
-      });
+    if (!matchedProduct) {
+      console.error("❌ Produit non trouvé dans la commande");
+      return;
     }
+
+    const colorNameObj = matchedProduct.color.colorName;
+    const cleanColorName =
+      typeof colorNameObj === "object" ? colorNameObj.fr : colorNameObj;
+    const cleanProductKey = `${productId}|${cleanColorName}`;
+
+    await sendNotification({
+      orderId,
+      email,
+      productKey: cleanProductKey,
+      progress: updatedValue,
+    }).unwrap();
+
+    Swal.fire({
+      title: "Notification envoyée",
+      text: `Une notification a été envoyée à ${order.name} pour ${updatedValue}% de progression.`,
+      icon: "info",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "btn btn-info",
+      },
+    });
+  }
+
+  // ✅ Clean up and refetch
+  setEditingProductKey(null);
+  refetch();
+
+} catch (error) {
+  // ❌ Error handling
+  console.error("❌ Erreur lors de l'enregistrement/notification:", error);
+  Swal.fire({
+    title: "Erreur",
+    text:
+      error?.data?.message ||
+      "Échec de l'enregistrement du progrès de la commande.",
+    icon: "error",
+    confirmButtonText: "OK",
+    customClass: {
+      confirmButton: "btn btn-danger",
+    },
+  });
+}
   };
-  
+// 🔧 Handle click to enter edit mode for a product
+const handleEdit = (productKey) => {
+  setEditingProductKey(productKey);
+};
 
+// 🕐 Show loading while fetching orders
+if (isLoading) return <p>Chargement des commandes...</p>;
 
-  const handleEdit = (productKey) => {
-    setEditingProductKey(productKey);
-  };
+// 📦 Render the orders and progress editor
+return (
+  <div className="p-4">
+    <h2 className="text-xl font-bold mb-4">Gérer l'Avancement des Commandes</h2>
+    <div className="max-h-[70vh] overflow-y-auto">
+      {orders.map((order) => (
+        <div key={order._id} className="border p-4 rounded mb-6">
+          {/* 🧾 Order Header */}
+          <h3 className="text-lg font-semibold mb-2 text-center">
+            Commande #{order._id.slice(0, 10)} - {order.name}
+          </h3>
 
-  if (isLoading) return <p>Chargement des commandes...</p>;
+          {/* 🛒 Products list for the order */}
+          {order.products.flatMap((prod, index) => {
+            const colorName =
+              typeof prod.color.colorName === "object"
+                ? prod.color.colorName[lang] || prod.color.colorName.en
+                : prod.color.colorName;
 
-  return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Gérer l'Avancement des Commandes</h2>
-      <div className="max-h-[70vh] overflow-y-auto">
-        {orders.map((order) => (
-          <div key={order._id} className="border p-4 rounded mb-6">
-            <h3 className="text-lg font-semibold mb-2 text-center">
-              Commande #{order._id.slice(0, 10)} - {order.name}
-            </h3>
-  
-            {order.products.flatMap((prod, index) => {
-              const colorName =
-                typeof prod.color.colorName === "object"
-                  ? prod.color.colorName[lang] || prod.color.colorName.en
-                  : prod.color.colorName;
-  
-              return Array.from({ length: prod.quantity }, (_, itemIndex) => {
-                const productKey = `${prod.productId._id}|${colorName}|${index}-${itemIndex}`;
-                const fullKey = `${order._id}|${productKey}`;
-                const currentValue = progressChanges[fullKey] ?? 0;
-    
+            return Array.from({ length: prod.quantity }, (_, itemIndex) => {
+              const productKey = `${prod.productId._id}|${colorName}|${index}-${itemIndex}`;
+              const fullKey = `${order._id}|${productKey}`;
+              const currentValue = progressChanges[fullKey] ?? 0;
 
-                
+              return (
+                <div key={fullKey} className="mb-4 border-t pt-4 text-center">
+                  {/* 🛍 Product info */}
+                  <p>
+                    <strong>{prod.productId.title}</strong> — Couleur: {colorName}
+                    <br />
+                    <span className="text-gray-500 text-sm">
+                      ID: {prod.productId._id} — Article #{itemIndex + 1}
+                    </span>
+                  </p>
 
+                  {/* 📊 Progress selection (radio buttons) */}
+                  <div className="flex flex-wrap gap-4 items-center mt-2 justify-center">
+                    {progressSteps.map((val, stepIndex) => (
+                      <label key={val} className="mr-4 flex flex-col items-center text-sm">
+                        <span className="text-gray-500 text-xs mb-1">Étape {stepIndex + 1}</span>
+                        <input
+                          type="radio"
+                          name={fullKey}
+                          value={val}
+                          checked={progressChanges[fullKey] === val}
+                          onChange={() => handleCheckboxChange(fullKey, val)}
+                          disabled={editingProductKey !== fullKey}
+                        />
+                        <span className="mt-1">{val}%</span>
+                      </label>
+                    ))}
 
-                return (
-                  <div key={fullKey} className="mb-4 border-t pt-4 text-center">
-                    <p>
-                      <strong>{prod.productId.title}</strong> — Couleur: {colorName}
-                      <br />
-                      <span className="text-gray-500 text-sm">
-                        ID: {prod.productId._id} — Article #{itemIndex + 1}
-                      </span>
-                    </p>
-  
-                    <div className="flex flex-wrap gap-4 items-center mt-2 justify-center">
-                      {progressSteps.map((val, stepIndex) => (
-                        <label key={val} className="mr-4 flex flex-col items-center text-sm">
-                          <span className="text-gray-500 text-xs mb-1">Étape {stepIndex + 1}</span>
-                          <input
-                            type="radio"
-                            name={fullKey}
-                            value={val}
-                            checked={progressChanges[fullKey] === val}
-                            onChange={() => handleCheckboxChange(fullKey, val)}
-                            disabled={editingProductKey !== fullKey}
-                          />
-                          <span className="mt-1">{val}%</span>
-                        </label>
-                      ))}
-  
-                      {editingProductKey === fullKey ? (
-                        <button
-                          onClick={() => handleSave(order._id, productKey)}
-                          className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Enregistrer
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleEdit(fullKey)}
-                          className="bg-yellow-500 text-white px-3 py-1 rounded text-sm"
-                        >
-                          Modifier
-                        </button>
-                      )}
-                    </div>
+                    {/* ✅ Save / Edit buttons */}
+                    {editingProductKey === fullKey ? (
+                      <button
+                        onClick={() => handleSave(order._id, productKey)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Enregistrer
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleEdit(fullKey)}
+                        className="bg-yellow-500 text-white px-3 py-1 rounded text-sm"
+                      >
+                        Modifier
+                      </button>
+                    )}
                   </div>
-                );
-              });
-            })}
-          </div>
-        ))}
-      </div>
+                </div>
+              );
+            });
+          })}
+        </div>
+      ))}
     </div>
-  );
-  
-  
-  
+  </div>
+);
+
 };
 
 export default AdminOrdersProgress;
-
-
-

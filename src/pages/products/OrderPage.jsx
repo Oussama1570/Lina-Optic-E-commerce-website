@@ -1,4 +1,5 @@
 import React from "react";
+import FadeInSection from "../../Animations/FadeInSection";
 
 // 🔄 API hooks for fetching and modifying orders
 import {
@@ -157,6 +158,7 @@ window.location.reload(); // Force DOM re-render (last resort for Android screen
 
 
  return (
+   <FadeInSection>
   <div className="order-page">
     {/* SEO page title */}
     <Helmet>
@@ -258,6 +260,7 @@ window.location.reload(); // Force DOM re-render (last resort for Android screen
       )}
     </div>
   </div>
+  </FadeInSection>
 );
 
 };

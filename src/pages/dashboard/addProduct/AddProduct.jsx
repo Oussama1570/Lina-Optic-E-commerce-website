@@ -2,10 +2,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useAddProductMutation } from "../../../redux/features/products/productsApi";
-import { useDispatch } from "react-redux";
-import { triggerRefetch } from "../../../redux/features/products/productEventsSlice";
-
-
 import Swal from "sweetalert2";
 import axios from "axios";
 import getBaseUrl from "../../../utils/baseURL";
@@ -93,106 +89,105 @@ const AddProduct = () => {
   };
 
   // ☁️ Upload a single image to the backend (used for both cover & color images)
-  // ☁️ Upload a single image to the Cloudinary endpoint
-// ☁️ Upload a single image to the server (Cloudinary via your backend)
-const uploadImage = async (file) => {
-  if (!file) return "";
-  try {
+  const uploadImage = async (file) => {
+    if (!file || !(file instanceof File) || !file.type.startsWith("image/")) return "";
     const formData = new FormData();
     formData.append("image", file);
-
-    // ✅ Correct backend endpoint
-    const res = await axios.post(`${getBaseUrl()}/api/upload/upload-image`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    // ✅ Assuming your backend returns { url: "...", public_id: "..." }
-    return res.data.url;
-  } catch (error) {
-    console.error("❌ Image upload failed:", error);
-    return "";
-  }
-};
+    try {
+      const res = await axios.post(`${getBaseUrl()}/api/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return res.data.image;
+    } catch (error) {
+      console.error("❌ Image upload failed:", error);
+      return "";
+    }
+  };
 
 
   // 📤 Handle form submission
-  const dispatch = useDispatch();
+  const onSubmit = async (data) => {
+    // ✅ Validate category selection before submitting
+    if (!mainCategory || !subCategory) {
+      Swal.fire("Erreur", "Veuillez sélectionner une catégorie et une sous-catégorie.", "error");
+      return;
+    }
 
-const onSubmit = async (data) => {
-  if (!mainCategory || !subCategory) {
-    Swal.fire("Erreur", "Veuillez sélectionner une catégorie et une sous-catégorie.", "error");
-    return;
-  }
+    // 🖼️ Upload the cover image if it’s a valid image file
+    let coverImage = "";
+    if (coverImageFile instanceof File && coverImageFile.type.startsWith("image/")) {
+      coverImage = await uploadImage(coverImageFile);
+    }
 
-  let coverImage = "";
-  if (coverImageFile instanceof File && coverImageFile.type.startsWith("image/")) {
-    coverImage = await uploadImage(coverImageFile);
-  }
+    // 🎨 Process color blocks: upload each color's images and structure color data
+    const colors = await Promise.all(
+      colorInputs.map(async (input) => {
+        if (
+          input.colorName &&
+          Array.isArray(input.imageFiles) &&
+          input.stock >= 0
+        ) {
+          const uploadedImages = [];
 
-  const colors = await Promise.all(
-    colorInputs.map(async (input) => {
-      if (
-        input.colorName &&
-        Array.isArray(input.imageFiles) &&
-        input.stock >= 0
-      ) {
-        const uploadedImages = [];
-        for (const file of input.imageFiles) {
-          if (file && file.type.startsWith("image/")) {
-            const imageUrl = await uploadImage(file);
-            uploadedImages.push(imageUrl);
+          // ☁️ Upload each image file for this color
+          for (const file of input.imageFiles) {
+            if (file && file.type.startsWith("image/")) {
+              const imageUrl = await uploadImage(file);
+              uploadedImages.push(imageUrl);
+            }
           }
+
+          // 🎯 Return color object in multilingual format with images and stock
+          return {
+            colorName: {
+              en: input.colorName,
+              fr: input.colorName, // Optional: replace with translations if needed
+              ar: input.colorName,
+            },
+            images: uploadedImages,
+            stock: Number(input.stock),
+          };
         }
 
-        return {
-          colorName: {
-            en: input.colorName,
-            fr: input.colorName,
-            ar: input.colorName,
-          },
-          images: uploadedImages,
-          stock: Number(input.stock),
-        };
-      }
+        return null; // ⛔ Skip invalid color blocks
+      })
+    );
 
-      return null;
-    })
-  );
+    // 🧼 Remove null values (failed or empty color blocks)
+    const filteredColors = colors.filter(Boolean);
 
-  const filteredColors = colors.filter(Boolean);
+    // 📦 Construct final product data to send
+    const newProductData = {
+      ...data,
+      mainCategory,
+      subCategory,
+      frameType: data.frameType || "",
+      coverImage,
+      colors: filteredColors,
+      brand: data.brand || "",
+      oldPrice: Number(data.oldPrice),
+      newPrice: Number(data.newPrice),
+      stockQuantity: filteredColors[0]?.stock || 0, // Initial stock from first color
+    };
 
-  const newProductData = {
-    ...data,
-    mainCategory,
-    subCategory,
-    frameType: data.frameType || "",
-    coverImage,
-    colors: filteredColors,
-    brand: data.brand || "",
-    oldPrice: Number(data.oldPrice),
-    newPrice: Number(data.newPrice),
-    stockQuantity: filteredColors[0]?.stock || 0,
+    try {
+      // 🚀 Submit product using RTK Query mutation
+      await addProduct(newProductData).unwrap();
+
+      // ✅ Success alert and reset form
+      Swal.fire("Succès!", "Produit ajouté avec succès!", "success");
+      reset();
+      setCoverImageFile(null);
+      setCoverPreviewURL("");
+      setColorInputs([]);
+    } catch (error) {
+      // ❌ Error handling on failure
+      console.error("❌ Error adding product:", error?.data || error);
+      Swal.fire("Erreur!", "Échec de l'ajout du produit.", "error");
+    }
   };
-
-  try {
-    await addProduct(newProductData).unwrap();
-    dispatch(triggerRefetch()); // ✅ THIS IS THE CORRECT PLACE
-
-    Swal.fire("Succès!", "Produit ajouté avec succès!", "success");
-    reset();
-    setCoverImageFile(null);
-    setCoverPreviewURL("");
-    setColorInputs([]);
-  } catch (error) {
-    console.error("❌ Error adding product:", error?.data || error);
-    Swal.fire("Erreur!", "Échec de l'ajout du produit.", "error");
-  }
-};
-
-
-  
-
-  
 
 
     // 🧾 Render the form UI

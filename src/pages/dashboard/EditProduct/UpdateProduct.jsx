@@ -11,12 +11,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import getBaseUrl from "../../../utils/baseURL";
 import { getImgUrl } from "../../../utils/getImgUrl";
-
-import { useDispatch } from "react-redux";
-import { triggerRefetch } from "../../../redux/features/products/productEventsSlice";
-
-
-
 import "../../../Styles/StylesUpdateProduct.css";
 
 // 🧩 Main component for updating a product
@@ -39,10 +33,6 @@ const UpdateProduct = () => {
   const [imageFile, setImageFile] = useState(null);
   const [previewURL, setPreviewURL] = useState("");
   const [colors, setColors] = useState([]);
-
-  // ✅ Inside your component
-const dispatch = useDispatch();
-
 
   // 📋 Options for subcategories
   const subCategoryOptions = [
@@ -151,15 +141,13 @@ const dispatch = useDispatch();
   };
 
   // 📨 Handle form submission to update product
-  // 📨 Handle form submission to update product
-const onSubmit = async (data) => {
-  // ❗ Validate category fields before submitting
-  if (!mainCategory || !subCategory) {
-    Swal.fire("Error", "Please select a category and subcategory.", "error");
-    return;
-  }
+  const onSubmit = async (data) => {
+    // ❗ Validate category fields before submitting
+    if (!mainCategory || !subCategory) {
+      Swal.fire("Error", "Please select a category and subcategory.", "error");
+      return;
+    }
 
-  try {
     // 📤 Upload new cover image if changed
     let coverImage = productData.coverImage || "";
     if (imageFile) {
@@ -188,7 +176,8 @@ const onSubmit = async (data) => {
       })
     );
 
-    // 📦 Final assembled product data to send to the backend
+
+       // 📦 Final assembled product data to send to the backend
     const updatedProductData = {
       ...data,
       mainCategory,
@@ -202,32 +191,27 @@ const onSubmit = async (data) => {
       stockQuantity: updatedColors[0]?.stock || 0, // Set stock based on first color
     };
 
-    // 🚀 Attempt to update the product
-    await updateProduct({ id, ...updatedProductData }).unwrap();
-    Swal.fire("Success!", "Product updated successfully!", "success");
+    try {
+      // 🚀 Attempt to update the product
+      await updateProduct({ id, ...updatedProductData }).unwrap();
+      Swal.fire("Success!", "Product updated successfully!", "success");
 
-    // 🧼 Clear temporary files and previews after update
-    setColors((prevColors) =>
-      prevColors.map((color) => ({
-        ...color,
-        imageFile: [],
-        previewURL: [],
-      }))
-    );
+      // 🧼 Clear temporary files and previews after update
+      setColors((prevColors) =>
+        prevColors.map((color) => ({
+          ...color,
+          imageFile: [],
+          previewURL: [],
+        }))
+      );
 
-    // 🔁 Optionally refetch the product data
-    refetch();
-
-    // 🔄 Trigger product list refetch
-    dispatch(triggerRefetch());
-
-  } catch (error) {
-    console.error("❌ Update failed:", error?.data || error);
-    Swal.fire("Error", "Failed to update product.", "error");
-  }
-};
-
-
+      // 🔁 Optionally refetch the product data
+      refetch();
+    } catch (error) {
+      console.error("❌ Update failed:", error?.data || error);
+      Swal.fire("Error", "Failed to update product.", "error");
+    }
+  };
 
   // ⏳ Show loading or error if data is not ready
   if (isLoading) return <Loading />;
@@ -237,8 +221,6 @@ const onSubmit = async (data) => {
         Error loading product data.
       </div>
     );
-
-    
 
   // 📄 Render update product form
   return (
@@ -442,4 +424,3 @@ const onSubmit = async (data) => {
 };
 
 export default UpdateProduct;
-

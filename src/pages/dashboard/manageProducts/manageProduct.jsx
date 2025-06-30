@@ -246,7 +246,7 @@ return (
                 <td colSpan="9" className="text-center p-6 border border-gray-300">
                   Aucun produit trouvé.
                 </td>
-              </tr>
+              </tr>z
             )
           )}
         </tbody>

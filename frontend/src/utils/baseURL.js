@@ -8,7 +8,7 @@ const getBaseUrl = () => {
   }
 
   // 🚀 If in production mode, return the deployed backend URL (e.g., on Vercel)
-  return 'https://lina-optic-app-backend.vercel.app';
+  return 'https://lina-optic-app-backend-two.vercel.app';
 };
 
 // 🚀 Export the function so it can be used across the project

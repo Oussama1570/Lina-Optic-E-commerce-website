@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { Carousel } from "react-responsive-carousel";
-import "react-responsive-carousel/lib/styles/carousel.min.css"; // 📦 Carousel default styles
+import "react-responsive-carousel/lib/styles/carousel.min.css"; // 📦 Carousel default styles // 
 import "../Styles/StylesLinaCarousel.css";
 
 // 📷 Carousel images
-import CarreraImg from "../assets/lunettes-carousel/CARRERA/carrera.jpg";
-import  CerrutiImg from "../assets/lunettes-carousel/Cerruti/cerruti.jpg";
-import GucciImg from "../assets/lunettes-carousel/GUCCI/gucci.jpg";
+import CarreraImg from "../assets/lina-carousel/carrera.jpg";
+import CerrutiImg from "../assets/lina-carousel/cerruti.jpg";
+import GucciImg from "../assets/lina-carousel/gucci.jpg";
 
 const LinaCarousel = () => {
   // 🖱️ Custom cursor animation inside the carousel wrapper
